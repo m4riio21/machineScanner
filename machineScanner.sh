@@ -35,45 +35,51 @@ function helpPanel(){
 }
 
 function machineScan(){
-	checkIp=$1
-	allPorts=""
-	clear
-	tput civis
-	echo -ne "${yellow}[*]${end}${blue} Comprobando que la OVPN esté desplegada"
-	sleep 0.5; echo -ne "."; sleep 0.5; echo -ne "."; sleep 0.5; echo -ne "."; sleep 1
+	if [ "$(whoami)" == "root" ]; then
+		checkIp=$1
+		allPorts=""
+		clear
+		tput civis
+		echo -ne "${yellow}[*]${end}${blue} Comprobando que la OVPN esté desplegada"
+		sleep 0.5; echo -ne "."; sleep 0.5; echo -ne "."; sleep 0.5; echo -ne "."; sleep 1
 
-	if [ "$ip" ]; then
-		numOk=0
-		echo -e "\t${green}[V]${end}"
-		sleep 2
-		echo -e "\n${yellow}[*]${end}${blue} Comprobando dependencias"
-		sleep 1
-		echo -ne "\n${gray}nmap"; sleep 0.25; nmap=$(which nmap); if [ $(echo $? -eq "0") ]; then let numOk+=1; echo -e "\t${green}[V]${end}"; else echo -e "\t${red}[X]${end}"; fi
-		sleep 1
-		echo -ne "\n${gray}searchsploit"; sleep 0.25; nmap=$(which searchsploit); if [ $(echo $? -eq "0") ]; then let numOk+=1; echo -e "\t${green}[V]${end}"; else echo -e "\t${red}[X]${end}"; fi
-		sleep 1
-		if [ $numOk == $numDependencies ]; then
-			clear
-			sleep 0.25
-			echo -e "\n${yellow}[*]${end}${blue} Comenzando la fase de reconocimiento"
-			ports=$(nmap -p- -sS --min-rate 5000 --open -T5 -n $checkIp | grep tcp | tr '/' ' ' | awk -F' ' '{print $1}' | xargs)
+		if [ "$ip" ]; then
+			numOk=0
+			echo -e "\t${green}[V]${end}"
+			sleep 2
+			echo -e "\n${yellow}[*]${end}${blue} Comprobando dependencias"
+			sleep 1
+			echo -ne "\n${gray}nmap"; sleep 0.25; nmap=$(which nmap); if [ $(echo $? -eq "0") ]; then let numOk+=1; echo -e "\t${green}[V]${end}"; else echo -e "\t${red}[X]${end}"; fi
+			sleep 1
+			echo -ne "\n${gray}searchsploit"; sleep 0.25; nmap=$(which searchsploit); if [ $(echo $? -eq "0") ]; then let numOk+=1; echo -e "\t${green}[V]${end}"; else echo -e "\t${red}[X]${end}"; fi
+			sleep 1
+			if [ $numOk == $numDependencies ]; then
+				clear
+				sleep 0.25
+				echo -e "\n${yellow}[*]${end}${blue} Comenzando la fase de reconocimiento"
+				ports=$(nmap -p- -sS --min-rate 5000 --open -T5 -n $checkIp | grep tcp | tr '/' ' ' | awk -F' ' '{print $1}' | xargs)
 
-			for port in $ports; do
-				allPorts=$allPorts$port","
-			done
-			clear
-			ports=$(echo $allPorts | sed s'/.$//')
-			echo -e "\n${yellow}[*]${end}${blue} Escaneo NMAP a la maquina $checkIp\n\n"
-			nmap -p"$ports" -sC -sV $checkIp | awk '/PORT/,/Nmap done/' 
-			echo -e "\n"
+				for port in $ports; do
+					allPorts=$allPorts$port","
+				done
+				clear
+				ports=$(echo $allPorts | sed s'/.$//')
+				echo -e "\n${yellow}[*]${end}${blue} Escaneo NMAP a la maquina $checkIp\n\n"
+				nmap -p"$ports" -sC -sV $checkIp | awk '/PORT/,/Nmap done/' 
+				echo -e "\n"
+				
+			fi
+		else
+			echo -e "\t${red}[X]${end}"
 		fi
+
+
+
+		tput cnorm
 	else
-		echo -e "\t${red}[X]${end}"
+		echo -e "\n\n${red} [!] Ejecuta el programa en modo root ${end}\n"
 	fi
 
-
-
-	tput cnorm
 }
 
 #Main
